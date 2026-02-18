@@ -1,0 +1,1901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Melbourne Social Choir</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #000;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        /* LIGHT MODE */
+        body.light {
+            background: #f5f5f5;
+            color: #111;
+        }
+
+        body.light .part {
+            background: rgba(0,0,0,0.10);
+        }
+        body.light .part.is-muted {
+            background: rgba(0,0,0,0.02);
+            opacity: 0.5;
+        }
+        body.light .part-name {
+            color: #111;
+        }
+        body.light .btn {
+            background: rgba(0,0,0,0.06);
+            color: rgba(0,0,0,0.7);
+            border-color: rgba(0,0,0,0.18);
+        }
+        body.light .btn:hover {
+            background: rgba(0,0,0,0.11);
+        }
+        body.light .btn.active {
+            background: #111;
+            color: #fff;
+            border-color: #111;
+        }
+        body.light .volume-slider::-webkit-slider-runnable-track {
+            background: rgba(0,0,0,0.15);
+        }
+        body.light .volume-slider::-moz-range-track {
+            background: rgba(0,0,0,0.15);
+        }
+        body.light .volume-slider::-webkit-slider-thumb {
+            background: #333;
+        }
+        body.light .volume-slider::-moz-range-thumb {
+            background: #333;
+        }
+        body.light .volume-value {
+            color: rgba(0,0,0,0.5);
+        }
+        body.light .reset-btn {
+            border-color: rgba(0,0,0,0.18);
+            background: rgba(0,0,0,0.05);
+            color: rgba(0,0,0,0.6);
+        }
+        body.light .reset-btn:hover {
+            background: rgba(0,0,0,0.1);
+            color: #111;
+        }
+        body.light .theme-btn {
+            border-color: rgba(0,0,0,0.18);
+            background: rgba(0,0,0,0.05);
+            color: rgba(0,0,0,0.6);
+        }
+        body.light .theme-btn:hover {
+            background: rgba(0,0,0,0.1);
+            color: #111;
+        }
+        body.light .transport {
+            background: rgba(0,0,0,0.06);
+        }
+        body.light .song-selector select {
+            background: #e0e0e0;
+            color: #111;
+            border-color: rgba(0,0,0,0.18);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23333' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        body.light .song-selector select option {
+            background: #e0e0e0;
+            color: #111;
+        }
+        body.light .transport-btn {
+            background: rgba(0,0,0,0.08);
+        }
+        body.light .transport-btn svg {
+            fill: #333;
+        }
+        body.light .play-btn {
+            background: rgba(0,0,0,0.08);
+        }
+        body.light .play-btn svg {
+            fill: #333;
+        }
+        body.light .bar-marker .bar-number {
+            color: rgba(0,0,0,0.45);
+        }
+        body.light .bar-marker.numbered .bar-number {
+            color: rgba(0,0,0,0.7);
+        }
+        body.light .bar-marker .bar-tick {
+            background: rgba(0,0,0,0.2);
+        }
+        body.light .bar-marker.numbered .bar-tick {
+            background: rgba(0,0,0,0.4);
+        }
+        body.light .progress-bar::-webkit-slider-runnable-track {
+            background: rgba(0,0,0,0.15);
+        }
+        body.light .progress-bar::-moz-range-track {
+            background: rgba(0,0,0,0.15);
+        }
+        body.light .progress-bar::-webkit-slider-thumb {
+            background: #333;
+        }
+        body.light .progress-bar::-moz-range-thumb {
+            background: #333;
+        }
+        body.light .time-display {
+            color: rgba(0,0,0,0.5);
+        }
+
+        .container {
+            padding: 20px 24px 16px;
+            display: flex;
+            flex-direction: column;
+            max-width: 860px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 14px;
+        }
+
+        /* HEADER */
+        .header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px 0 16px;
+            flex-shrink: 0;
+        }
+
+        .header img {
+            height: auto;
+            width: 100%;
+            max-width: 560px;
+            object-fit: contain;
+        }
+
+        /* PARTS */
+        .parts-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .part {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 13px 16px;
+            cursor: default;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            width: 100%;
+            box-sizing: border-box;
+            transition: background 0.2s;
+        }
+
+        .part.is-muted {
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .part-header {
+            display: contents; /* name becomes direct flex child of .part */
+        }
+
+        /* Fixed width matching "Baritone" so all sliders left-align perfectly */
+        .part-name {
+            font-weight: 700;
+            font-size: 15px;
+            letter-spacing: 0.3px;
+            color: #fff;
+            width: 76px;
+            flex-shrink: 0;
+        }
+
+        .volume-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .part-controls {
+            display: flex;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .btn {
+            padding: 5px 11px;
+            border: 1px solid rgba(255,255,255,0.25);
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+            background: rgba(255, 255, 255, 0.08);
+            color: rgba(255,255,255,0.85);
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn.active {
+            background: #fff;
+            color: #000;
+            border-color: #fff;
+        }
+
+        .volume-slider {
+            flex: 1;
+            height: 24px;
+            border-radius: 2px;
+            background: transparent;
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+
+        .volume-slider::-webkit-slider-runnable-track {
+            height: 4px;
+            border-radius: 2px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .volume-slider::-moz-range-track {
+            height: 4px;
+            border-radius: 2px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+            margin-top: -6px;
+        }
+
+        .volume-slider::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+            border: none;
+        }
+
+        .volume-value {
+            font-size: 11px;
+            min-width: 33px;
+            text-align: right;
+            color: rgba(255,255,255,0.6);
+        }
+
+        /* RESET + THEME TOGGLE */
+        .reset-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin-top: 14px;
+            margin-bottom: 4px;
+        }
+
+        .reset-btn {
+            height: 34px;
+            padding: 0 22px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.07);
+            color: rgba(255,255,255,0.7);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+            letter-spacing: 0.4px;
+        }
+
+        .reset-btn:hover {
+            background: rgba(255, 255, 255, 0.14);
+            color: #fff;
+        }
+
+        .reset-btn:active {
+            transform: scale(0.95);
+        }
+
+        .theme-btn {
+            width: 34px;
+            height: 34px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 50%;
+            background: rgba(255,255,255,0.07);
+            color: rgba(255,255,255,0.7);
+            cursor: pointer;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .theme-btn:hover {
+            background: rgba(255,255,255,0.14);
+            color: #fff;
+        }
+
+        .theme-btn:active {
+            transform: scale(0.95);
+        }
+
+        .theme-btn svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+
+        /* TRANSPORT */
+        .transport {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            padding: 20px 20px 20px;
+            flex-shrink: 0;
+            margin-bottom: 16px;
+        }
+
+        /* Song selector inside transport */
+        .song-selector {
+            margin-bottom: 14px;
+        }
+
+        .song-selector select {
+            width: 100%;
+            padding: 9px 12px;
+            font-size: 15px;
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 8px;
+            background-color: #1a1a1a;
+            color: #fff;
+            font-weight: 600;
+            -webkit-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='white' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 32px;
+        }
+
+        .song-selector select option {
+            background: #1a1a1a;
+            color: #fff;
+        }
+
+        .transport-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: auto;
+            margin-bottom: 0;
+            padding-bottom: 4px;
+        }
+
+        .transport-btn {
+            width: 60px;
+            height: 60px;
+            border: none;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            color: #000;
+            font-size: 0;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .transport-btn:active {
+            transform: scale(0.95);
+            opacity: 0.8;
+        }
+
+        /* SVG icons perfectly centred */
+        .transport-btn svg {
+            width: 22px;
+            height: 22px;
+            fill: #fff;
+            display: block;
+        }
+
+        .play-btn {
+            background: #fff;
+        }
+
+        .play-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: #000;
+            transform: translateX(2px);
+        }
+
+        /* Loading spinner on play button */
+        .play-btn.loading {
+            background: rgba(255,255,255,0.15);
+            cursor: not-allowed;
+        }
+        body.light .play-btn.loading {
+            background: rgba(0,0,0,0.08);
+        }
+        .play-btn.loading svg { display: none; }
+        .play-btn.loading::after {
+            content: '';
+            display: block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.25);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+        body.light .play-btn.loading::after {
+            border-color: rgba(0,0,0,0.15);
+            border-top-color: #333;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* BAR RULER */
+        .bar-ruler-wrapper {
+            display: flex;
+            /* time-display (36px) + gap (8px) = 44px each side,
+               then add thumb half-width (8px) for track inset */
+            padding: 0 52px 0 52px;
+            margin-bottom: 2px;
+        }
+
+        .bar-ruler {
+            position: relative;
+            flex: 1;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .bar-marker {
+            position: absolute;
+            bottom: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            /* centre the marker on its timestamp position */
+            transform: translateX(-50%);
+            pointer-events: none;
+            user-select: none;
+            width: 1px; /* zero-width anchor so translateX(-50%) is exactly on the beat */
+        }
+
+        .bar-marker .bar-number {
+            font-size: 9px;
+            color: rgba(255,255,255,0.45);
+            line-height: 1;
+            margin-bottom: 3px;
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+            /* override the width:1px of parent so text centres properly */
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .bar-marker .bar-tick {
+            width: 1px;
+            height: 5px;
+            background: rgba(255,255,255,0.25);
+            flex-shrink: 0;
+        }
+
+        /* highlighted tick for numbered bars */
+        .bar-marker.numbered .bar-number {
+            color: rgba(255,255,255,0.75);
+        }
+
+        .bar-marker.numbered .bar-tick {
+            height: 7px;
+            background: rgba(255,255,255,0.5);
+        }
+
+        .progress-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .time-display {
+            font-size: 11px;
+            min-width: 36px;
+            color: rgba(255,255,255,0.6);
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .time-display:last-child {
+            text-align: right;
+        }
+
+        .progress-bar {
+            flex: 1;
+            height: 24px;
+            border-radius: 2px;
+            background: transparent;
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+
+        .progress-bar::-webkit-slider-runnable-track {
+            height: 4px;
+            border-radius: 2px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .progress-bar::-moz-range-track {
+            height: 4px;
+            border-radius: 2px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .progress-bar::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+            margin-top: -6px;
+        }
+
+        .progress-bar::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+            border: none;
+        }
+
+        .part-downloads {
+            display: flex;
+            gap: 5px;
+            flex-shrink: 0;
+        }
+
+        .download-btn {
+            padding: 4px 7px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 5px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.4px;
+            cursor: pointer;
+            text-decoration: none;
+            color: rgba(255,255,255,0.45);
+            background: transparent;
+            transition: all 0.15s;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+        }
+
+        .download-btn:hover {
+            color: #fff;
+            border-color: rgba(255,255,255,0.5);
+            background: rgba(255,255,255,0.08);
+        }
+
+        .download-btn.unavailable {
+            opacity: 0.2;
+            pointer-events: none;
+        }
+
+        body.light .download-btn {
+            color: rgba(0,0,0,0.35);
+            border-color: rgba(0,0,0,0.18);
+        }
+        body.light .download-btn:hover {
+            color: #111;
+            border-color: rgba(0,0,0,0.45);
+            background: rgba(0,0,0,0.06);
+        }
+        body.light .download-btn.unavailable { opacity: 0.2; }
+
+        /* CLICK PART dropdown */
+        /* Click row spacer layout */
+        .click-downloads-spacer {
+            /* mirror .part-downloads so slider right-edge aligns */
+            flex-shrink: 0;
+        }
+        .click-select {
+            flex: 1;
+            min-width: 0;
+            padding: 5px 28px 5px 8px;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1px solid rgba(255,255,255,0.25);
+            border-radius: 6px;
+            background-color: #333;
+            color: rgba(255,255,255,0.85);
+            cursor: pointer;
+            -webkit-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='rgba(255,255,255,0.7)' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+        }
+        .click-select option {
+            background: #1a1a1a;
+            color: #fff;
+        }
+        .click-select:hover {
+            border-color: rgba(255,255,255,0.5);
+            color: #fff;
+        }
+        body.light .click-select {
+            background-color: rgba(0,0,0,0.06);
+            color: rgba(0,0,0,0.8);
+            border-color: rgba(0,0,0,0.2);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='rgba(0,0,0,0.5)' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+        }
+        body.light .click-select option {
+            background: #e0e0e0;
+            color: #111;
+        }
+        body.light .click-select:hover {
+            color: #111;
+            border-color: rgba(0,0,0,0.4);
+        }
+
+        @media (max-width: 540px) {
+            .container { padding: 10px 12px 12px; gap: 10px; }
+            .header img { max-width: 320px; }
+            .part {
+                flex-wrap: wrap;
+                gap: 8px;
+                padding: 10px 12px;
+            }
+            .part-header {
+                display: flex;
+            }
+            /* name + buttons share top row, slider wraps to full-width second row */
+            .volume-control {
+                width: 100%;
+                flex: none;
+                order: 10;
+            }
+            .part-name { width: auto; font-size: 13px; }
+            .btn { padding: 5px 9px; font-size: 11px; }
+            .part-downloads { gap: 4px; }
+            .download-btn { font-size: 9px; padding: 3px 6px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+
+        <div class="header">
+            <img src="images/logo-dark.png" alt="Melbourne Social Choir">
+        </div>
+
+        <div class="parts-container" id="partsContainer">
+            <div class="part" data-part="soprano">
+                <div class="part-header">
+                    <div class="part-name">Soprano</div>
+                </div>
+                <div class="part-controls">
+                    <button class="btn prominent-btn">Hero</button>
+                    <button class="btn solo-btn">Solo</button>
+                    <button class="btn mute-btn">Mute</button>
+                </div>
+                <div class="volume-control">
+                    <input type="range" class="volume-slider" min="0" max="100" value="100">
+                    <div class="volume-value">100%</div>
+                </div>
+                <div class="part-downloads">
+                    <a class="download-btn" href="#" target="_blank" rel="noopener">PDF</a>
+                    <a class="download-btn" href="#" target="_blank" rel="noopener">MP3</a>
+                </div>
+            </div>
+
+            <div class="part" data-part="mezzo">
+                <div class="part-header">
+                    <div class="part-name">Mezzo</div>
+                </div>
+                <div class="part-controls">
+                    <button class="btn prominent-btn">Hero</button>
+                    <button class="btn solo-btn">Solo</button>
+                    <button class="btn mute-btn">Mute</button>
+                </div>
+                <div class="volume-control">
+                    <input type="range" class="volume-slider" min="0" max="100" value="100">
+                    <div class="volume-value">100%</div>
+                </div>
+                <div class="part-downloads">
+                    <a class="download-btn" href="#" target="_blank" rel="noopener">PDF</a>
+                    <a class="download-btn" href="#" target="_blank" rel="noopener">MP3</a>
+                </div>
+            </div>
+
+            <div class="part" data-part="alto">
+                <div class="part-header">
+                    <div class="part-name">Alto</div>
+                </div>
+                <div class="part-controls">
+                    <button class="btn prominent-btn">Hero</button>
+                    <button class="btn solo-btn">Solo</button>
+                    <button class="btn mute-btn">Mute</button>
+                </div>
+                <div class="volume-control">
+                    <input type="range" class="volume-slider" min="0" max="100" value="100">
+                    <div class="volume-value">100%</div>
+                </div>
+                <div class="part-downloads">
+                    <a class="download-btn" href="#" target="_blank" rel="noopener">PDF</a>
+                    <a class="download-btn" href="#" target="_blank" rel="noopener">MP3</a>
+                </div>
+            </div>
+
+            <div class="part" data-part="tenor">
+                <div class="part-header">
+                    <div class="part-name">Tenor</div>
+                </div>
+                <div class="part-controls">
+                    <button class="btn prominent-btn">Hero</button>
+                    <button class="btn solo-btn">Solo</button>
+                    <button class="btn mute-btn">Mute</button>
+                </div>
+                <div class="volume-control">
+                    <input type="range" class="volume-slider" min="0" max="100" value="100">
+                    <div class="volume-value">100%</div>
+                </div>
+                <div class="part-downloads">
+                    <a class="download-btn" href="#" target="_blank" rel="noopener">PDF</a>
+                    <a class="download-btn" href="#" target="_blank" rel="noopener">MP3</a>
+                </div>
+            </div>
+
+            <div class="part" data-part="baritone">
+                <div class="part-header">
+                    <div class="part-name">Baritone</div>
+                </div>
+                <div class="part-controls">
+                    <button class="btn prominent-btn">Hero</button>
+                    <button class="btn solo-btn">Solo</button>
+                    <button class="btn mute-btn">Mute</button>
+                </div>
+                <div class="volume-control">
+                    <input type="range" class="volume-slider" min="0" max="100" value="100">
+                    <div class="volume-value">100%</div>
+                </div>
+                <div class="part-downloads">
+                    <a class="download-btn" href="#" target="_blank" rel="noopener">PDF</a>
+                    <a class="download-btn" href="#" target="_blank" rel="noopener">MP3</a>
+                </div>
+            </div>
+
+            <div class="part" data-part="click">
+                <div class="part-header">
+                    <div class="part-name">Click</div>
+                </div>
+                <div class="part-controls">
+                    <select class="click-select" id="clickTypeSelect">
+                        <option value="digital">Digital</option>
+                        <option value="tambourine">Tambourine</option>
+                        <option value="shaker">Shaker</option>
+                    </select>
+                    <button class="btn mute-btn">Mute</button>
+                </div>
+                <div class="volume-control">
+                    <input type="range" class="volume-slider" min="0" max="100" value="50">
+                    <div class="volume-value">50%</div>
+                </div>
+                <div class="part-downloads click-downloads-spacer">
+                    <a class="download-btn" style="visibility:hidden">PDF</a>
+                    <a class="download-btn" style="visibility:hidden">MP3</a>
+                </div>
+            </div>
+
+            <div class="reset-container">
+                <button id="resetBtn" class="reset-btn">Reset</button>
+                <button id="themeBtn" class="theme-btn" aria-label="Toggle light/dark mode">
+                    <!-- moon icon (shown in dark mode) -->
+                    <svg id="themeIcon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="transport">
+            <div class="song-selector">
+                        <select id="songSelect">
+                            <option value="0" style="display:none">Select a Song...</option>
+                            <option value="1" selected>MSC Theme Song</option>
+                            <option value="2">The Mamas &amp; The Papas - California Dreaming</option>
+                            <option value="3">The Ronettes - Be My Baby</option>
+                            <option value="4">Kylie Minogue - Love at First Sight</option>
+                            <option value="5">Fleet Foxes - White Winter Hymnal</option>
+                            <option value="6">Robyn - Dancing On My Own</option>
+                            <option value="7">Fleetwood Mac - Dreams</option>
+                            <option value="8">Roll The Old Chariot Along</option>
+                            <option value="9">Howard Goodall - Ecce Homo</option>
+                            <option value="10">The Beatles - With A Little Help From My Friends</option>
+                            <option value="11">Toto - Africa</option>
+                            <option value="12">Les Miserables - Do You Hear The People Sing</option>
+                            <option value="13">Crowded House - Fall At Your Feet</option>
+                            <option value="14">Henry Mancini - Moon River</option>
+                            <option value="15">Chappell Roan - Pink Pony Club</option>
+                        </select>
+                    </div>
+                    <div class="transport-buttons">
+                        <!-- Previous / restart -->
+                        <button class="transport-btn" id="restartBtn" aria-label="Previous / Restart">
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <rect x="4" y="4" width="2.5" height="16" rx="1"/>
+                                <polygon points="19,4 8,12 19,20"/>
+                            </svg>
+                        </button>
+                        <!-- Play / Pause -->
+                        <button class="transport-btn play-btn" id="playBtn" aria-label="Play / Pause">
+                            <svg id="playIcon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <polygon points="6,3 20,12 6,21"/>
+                            </svg>
+                        </button>
+                        <!-- Next -->
+                        <button class="transport-btn" id="nextBtn" aria-label="Next Song">
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <polygon points="5,4 16,12 5,20"/>
+                                <rect x="17.5" y="4" width="2.5" height="16" rx="1"/>
+                            </svg>
+                        </button>
+                    </div>
+            <div class="bar-ruler-wrapper">
+                <div class="bar-ruler" id="barRuler"></div>
+            </div>
+            <div class="progress-container">
+                <div class="time-display" id="currentTime">0:00</div>
+                <input type="range" class="progress-bar" id="progressBar" min="0" max="100" value="0">
+                <div class="time-display" id="duration">0:00</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ── AUDIO ENGINE: fetch + decodeAudioData for all parts ──────────────
+        // Using AudioBufferSourceNode instead of <audio>+createMediaElementSource.
+        // Buffers are fully in memory — no streaming, no suspended-context issues,
+        // no concurrent-load throttling, instant seek, instant duration knowledge.
+
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const parts = ['soprano', 'mezzo', 'alto', 'tenor', 'baritone'];
+
+        const panValues = {
+            soprano:  0.5,
+            mezzo:    0.25,
+            alto:     0,
+            tenor:   -0.25,
+            baritone:-0.5
+        };
+
+        // Per-song decoded buffers (keyed by part)
+        let audioBuffers   = {};   // decoded AudioBuffer per part
+        let gainNodes      = {};   // GainNode per part (persists across seeks)
+        let pannerNodes    = {};   // StereoPannerNode per part (persists)
+        let sourceNodes    = {};   // AudioBufferSourceNode per part (recreated each play/seek)
+
+        // Playback state
+        let isPlaying      = false;
+        let currentSong    = null;
+        let atStart        = true;
+        let isScrubbing    = false;
+        let playStartTime  = 0;    // audioContext.currentTime when play started
+        let playOffset     = 0;    // song position (seconds) when play started
+        let rafId          = null; // requestAnimationFrame id for progress updates
+        let songDuration   = 0;    // duration of current song in seconds
+        let loadToken      = 0;    // incremented on each loadSong to cancel stale loads
+
+        // Intro + click remain plain <audio> — no panning needed, simpler is fine
+        let introAudio     = null;
+        let clickAudio     = null;
+        let clickType      = 'digital';
+
+        const songs = {
+            // ┌─────────────────────────────────────────────────────┐
+            // │  BAR GRID — edit these values for each song         │
+            // │  startTime: when bar 1 begins, in seconds           │
+            // │  tempo:     beats per minute                        │
+            // │  beatsPerBar: time signature numerator (e.g. 4)     │
+            // └─────────────────────────────────────────────────────┘
+            1: {
+                title: "MSC Theme Song",
+                bars: { startTime: 4, tempo: 120, beatsPerBar: 4, labelEvery: 4 },
+                files: {
+                    soprano:  "songs/00 - MSC Theme Song/soprano.mp3",
+                    mezzo:    "songs/00 - MSC Theme Song/mezzo.mp3",
+                    alto:     "songs/00 - MSC Theme Song/alto.mp3",
+                    tenor:    "songs/00 - MSC Theme Song/tenor.mp3",
+                    baritone: "songs/00 - MSC Theme Song/baritone.mp3"
+                },
+                downloads: {
+                    soprano:  { pdf: "", wav: "" },
+                    mezzo:    { pdf: "", wav: "" },
+                    alto:     { pdf: "", wav: "" },
+                    tenor:    { pdf: "", wav: "" },
+                    baritone: { pdf: "", wav: "" }
+                }
+            },
+            2: {
+                title: "The Mamas & The Papas - California Dreaming",
+                bars: { startTime: 4.3, tempo: 110, beatsPerBar: 4, labelEvery: 4 },
+                files: {
+                    soprano:  "songs/01 - The Mamas & The Papas - California Dreaming/soprano.mp3",
+                    mezzo:    "songs/01 - The Mamas & The Papas - California Dreaming/mezzo.mp3",
+                    alto:     "songs/01 - The Mamas & The Papas - California Dreaming/alto.mp3",
+                    tenor:    "songs/01 - The Mamas & The Papas - California Dreaming/tenor.mp3",
+                    baritone: "songs/01 - The Mamas & The Papas - California Dreaming/baritone.mp3"
+                },
+                downloads: {
+                    soprano:  { pdf: "", wav: "" },
+                    mezzo:    { pdf: "", wav: "" },
+                    alto:     { pdf: "", wav: "" },
+                    tenor:    { pdf: "", wav: "" },
+                    baritone: { pdf: "", wav: "" }
+                }
+            },
+            3: {
+                title: "The Ronettes - Be My Baby",
+                bars: { startTime: 3.7, tempo: 130, beatsPerBar: 4, labelEvery: 4 },
+                files: {
+                    soprano:  "songs/02 - The Ronettes - Be My Baby/soprano.mp3",
+                    mezzo:    "songs/02 - The Ronettes - Be My Baby/mezzo.mp3",
+                    alto:     "songs/02 - The Ronettes - Be My Baby/alto.mp3",
+                    tenor:    "songs/02 - The Ronettes - Be My Baby/tenor.mp3",
+                    baritone: "songs/02 - The Ronettes - Be My Baby/baritone.mp3"
+                },
+                downloads: {
+                    soprano:  { pdf: "", wav: "" },
+                    mezzo:    { pdf: "", wav: "" },
+                    alto:     { pdf: "", wav: "" },
+                    tenor:    { pdf: "", wav: "" },
+                    baritone: { pdf: "", wav: "" }
+                }
+            },
+            4: {
+                title: "Kylie Minogue - Love at First Sight",
+                bars: { startTime: 4, tempo: 120, beatsPerBar: 4, labelEvery: 4 },
+                files: {
+                    soprano:  "songs/03 - Kylie Minogue - Love at First Sight/soprano.mp3",
+                    mezzo:    "songs/03 - Kylie Minogue - Love at First Sight/mezzo.mp3",
+                    alto:     "songs/03 - Kylie Minogue - Love at First Sight/alto.mp3",
+                    tenor:    "songs/03 - Kylie Minogue - Love at First Sight/tenor.mp3",
+                    baritone: "songs/03 - Kylie Minogue - Love at First Sight/baritone.mp3"
+                },
+                downloads: {
+                    soprano:  { pdf: "", wav: "" },
+                    mezzo:    { pdf: "", wav: "" },
+                    alto:     { pdf: "", wav: "" },
+                    tenor:    { pdf: "", wav: "" },
+                    baritone: { pdf: "", wav: "" }
+                }
+            },
+            5: {
+                title: "Fleet Foxes - White Winter Hymnal",
+                bars: { startTime: 3.8, tempo: 125, beatsPerBar: 4, labelEvery: 4 },
+                files: {
+                    soprano:  "songs/04 - Fleet Foxes - White Winter Hymnal/soprano.mp3",
+                    mezzo:    "songs/04 - Fleet Foxes - White Winter Hymnal/mezzo.mp3",
+                    alto:     "songs/04 - Fleet Foxes - White Winter Hymnal/alto.mp3",
+                    tenor:    "songs/04 - Fleet Foxes - White Winter Hymnal/tenor.mp3",
+                    baritone: "songs/04 - Fleet Foxes - White Winter Hymnal/baritone.mp3"
+                },
+                downloads: {
+                    soprano:  { pdf: "", wav: "" },
+                    mezzo:    { pdf: "", wav: "" },
+                    alto:     { pdf: "", wav: "" },
+                    tenor:    { pdf: "", wav: "" },
+                    baritone: { pdf: "", wav: "" }
+                }
+            },
+            6: {
+                title: "Robyn - Dancing On My Own",
+                bars: { startTime: 4.06, tempo: 118, beatsPerBar: 4, labelEvery: 4 },
+                files: {
+                    soprano:  "songs/05 - Robyn - Dancing On My Own/soprano.mp3",
+                    mezzo:    "songs/05 - Robyn - Dancing On My Own/mezzo.mp3",
+                    alto:     "songs/05 - Robyn - Dancing On My Own/alto.mp3",
+                    tenor:    "songs/05 - Robyn - Dancing On My Own/tenor.mp3",
+                    baritone: "songs/05 - Robyn - Dancing On My Own/baritone.mp3"
+                },
+                downloads: {
+                    soprano:  { pdf: "", wav: "" },
+                    mezzo:    { pdf: "", wav: "" },
+                    alto:     { pdf: "", wav: "" },
+                    tenor:    { pdf: "", wav: "" },
+                    baritone: { pdf: "", wav: "" }
+                }
+            },
+            7: {
+                title: "Fleetwood Mac - Dreams",
+                bars: { startTime: 4, tempo: 120, beatsPerBar: 4, labelEvery: 4 },
+                files: {
+                    soprano:  "songs/06 - Fleetwood Mac - Dreams/soprano.mp3",
+                    mezzo:    "songs/06 - Fleetwood Mac - Dreams/mezzo.mp3",
+                    alto:     "songs/06 - Fleetwood Mac - Dreams/alto.mp3",
+                    tenor:    "songs/06 - Fleetwood Mac - Dreams/tenor.mp3",
+                    baritone: "songs/06 - Fleetwood Mac - Dreams/baritone.mp3"
+                },
+                downloads: {
+                    soprano:  { pdf: "", wav: "" },
+                    mezzo:    { pdf: "", wav: "" },
+                    alto:     { pdf: "", wav: "" },
+                    tenor:    { pdf: "", wav: "" },
+                    baritone: { pdf: "", wav: "" }
+                }
+            },
+            8: {
+                title: "Roll The Old Chariot Along",
+                bars: { startTime: 4, tempo: 120, beatsPerBar: 4, labelEvery: 4 },
+                files: {
+                    soprano:  "songs/07 - Roll The Old Chariot Along/soprano.mp3",
+                    mezzo:    "songs/07 - Roll The Old Chariot Along/mezzo.mp3",
+                    alto:     "songs/07 - Roll The Old Chariot Along/alto.mp3",
+                    tenor:    "songs/07 - Roll The Old Chariot Along/tenor.mp3",
+                    baritone: "songs/07 - Roll The Old Chariot Along/baritone.mp3"
+                },
+                downloads: {
+                    soprano:  { pdf: "", wav: "" },
+                    mezzo:    { pdf: "", wav: "" },
+                    alto:     { pdf: "", wav: "" },
+                    tenor:    { pdf: "", wav: "" },
+                    baritone: { pdf: "", wav: "" }
+                }
+            },
+            9: {
+                title: "Howard Goodall - Ecce Homo",
+                bars: { startTime: 4.57, tempo: 105, beatsPerBar: 4, labelEvery: 4 },
+                files: {
+                    soprano:  "songs/08 - Howard Goodall - Ecce Homo/soprano.mp3",
+                    mezzo:    "songs/08 - Howard Goodall - Ecce Homo/mezzo.mp3",
+                    alto:     "songs/08 - Howard Goodall - Ecce Homo/alto.mp3",
+                    tenor:    "songs/08 - Howard Goodall - Ecce Homo/tenor.mp3",
+                    baritone: "songs/08 - Howard Goodall - Ecce Homo/baritone.mp3"
+                },
+                downloads: {
+                    soprano:  { pdf: "", wav: "" },
+                    mezzo:    { pdf: "", wav: "" },
+                    alto:     { pdf: "", wav: "" },
+                    tenor:    { pdf: "", wav: "" },
+                    baritone: { pdf: "", wav: "" }
+                }
+            },
+            10: {
+                title: "The Beatles - With A Little Help From My Friends",
+                bars: { startTime: 4.36, tempo: 110, beatsPerBar: 4, labelEvery: 4 },
+                files: {
+                    soprano:  "songs/09 - The Beatles - With A Little Help From My Friends/soprano.mp3",
+                    mezzo:    "songs/09 - The Beatles - With A Little Help From My Friends/mezzo.mp3",
+                    alto:     "songs/09 - The Beatles - With A Little Help From My Friends/alto.mp3",
+                    tenor:    "songs/09 - The Beatles - With A Little Help From My Friends/tenor.mp3",
+                    baritone: "songs/09 - The Beatles - With A Little Help From My Friends/baritone.mp3"
+                },
+                downloads: {
+                    soprano:  { pdf: "", wav: "" },
+                    mezzo:    { pdf: "", wav: "" },
+                    alto:     { pdf: "", wav: "" },
+                    tenor:    { pdf: "", wav: "" },
+                    baritone: { pdf: "", wav: "" }
+                }
+            },
+            11: {
+                title: "Toto - Africa",
+                bars: { startTime: 5.16, tempo: 93, beatsPerBar: 4, labelEvery: 4 },
+                files: {
+                    soprano:  "songs/10 - Toto - Africa/soprano.mp3",
+                    mezzo:    "songs/10 - Toto - Africa/mezzo.mp3",
+                    alto:     "songs/10 - Toto - Africa/alto.mp3",
+                    tenor:    "songs/10 - Toto - Africa/tenor.mp3",
+                    baritone: "songs/10 - Toto - Africa/baritone.mp3"
+                },
+                downloads: {
+                    soprano:  { pdf: "", wav: "" },
+                    mezzo:    { pdf: "", wav: "" },
+                    alto:     { pdf: "", wav: "" },
+                    tenor:    { pdf: "", wav: "" },
+                    baritone: { pdf: "", wav: "" }
+                }
+            },
+            12: {
+                title: "Les Miserables - Do You Hear The People Sing",
+                bars: { startTime: 3.53, tempo: 85, beatsPerBar: 4, labelEvery: 4 },
+                files: {
+                    soprano:  "songs/11 - Les Miserables - Do You Hear The People Sing/soprano.mp3",
+                    mezzo:    "songs/11 - Les Miserables - Do You Hear The People Sing/mezzo.mp3",
+                    alto:     "songs/11 - Les Miserables - Do You Hear The People Sing/alto.mp3",
+                    tenor:    "songs/11 - Les Miserables - Do You Hear The People Sing/tenor.mp3",
+                    baritone: "songs/11 - Les Miserables - Do You Hear The People Sing/baritone.mp3"
+                },
+                downloads: {
+                    soprano:  { pdf: "", wav: "" },
+                    mezzo:    { pdf: "", wav: "" },
+                    alto:     { pdf: "", wav: "" },
+                    tenor:    { pdf: "", wav: "" },
+                    baritone: { pdf: "", wav: "" }
+                }
+            },
+            13: {
+                title: "Crowded House - Fall At Your Feet",
+                bars: { startTime: 4.706, tempo: 102, beatsPerBar: 4, labelEvery: 4 },
+                files: {
+                    soprano:  "songs/12 - Crowded House - Fall At Your Feet/soprano.mp3",
+                    mezzo:    "songs/12 - Crowded House - Fall At Your Feet/mezzo.mp3",
+                    alto:     "songs/12 - Crowded House - Fall At Your Feet/alto.mp3",
+                    tenor:    "songs/12 - Crowded House - Fall At Your Feet/tenor.mp3",
+                    baritone: "songs/12 - Crowded House - Fall At Your Feet/baritone.mp3"
+                },
+                downloads: {
+                    soprano:  { pdf: "", wav: "" },
+                    mezzo:    { pdf: "", wav: "" },
+                    alto:     { pdf: "", wav: "" },
+                    tenor:    { pdf: "", wav: "" },
+                    baritone: { pdf: "", wav: "" }
+                }
+            },
+            14: {
+                title: "Henry Mancini - Moon River",
+                bars: { startTime: 3.829, tempo: 94, beatsPerBar: 3, labelEvery: 4 },
+                files: {
+                    soprano:  "songs/13 - Henry Mancini - Moon River/soprano.mp3",
+                    mezzo:    "songs/13 - Henry Mancini - Moon River/mezzo.mp3",
+                    alto:     "songs/13 - Henry Mancini - Moon River/alto.mp3",
+                    tenor:    "songs/13 - Henry Mancini - Moon River/tenor.mp3",
+                    baritone: "songs/13 - Henry Mancini - Moon River/baritone.mp3"
+                },
+                downloads: {
+                    soprano:  { pdf: "", wav: "" },
+                    mezzo:    { pdf: "", wav: "" },
+                    alto:     { pdf: "", wav: "" },
+                    tenor:    { pdf: "", wav: "" },
+                    baritone: { pdf: "", wav: "" }
+                }
+            },
+            15: {
+                title: "Chappell Roan - Pink Pony Club",
+                bars: { startTime: 4.485, tempo: 107, beatsPerBar: 4, labelEvery: 4 },
+                files: {
+                    soprano:  "songs/14 - Chappell Roan - Pink Pony Club/soprano.mp3",
+                    mezzo:    "songs/14 - Chappell Roan - Pink Pony Club/mezzo.mp3",
+                    alto:     "songs/14 - Chappell Roan - Pink Pony Club/alto.mp3",
+                    tenor:    "songs/14 - Chappell Roan - Pink Pony Club/tenor.mp3",
+                    baritone: "songs/14 - Chappell Roan - Pink Pony Club/baritone.mp3"
+                },
+                downloads: {
+                    soprano:  { pdf: "", wav: "" },
+                    mezzo:    { pdf: "", wav: "" },
+                    alto:     { pdf: "", wav: "" },
+                    tenor:    { pdf: "", wav: "" },
+                    baritone: { pdf: "", wav: "" }
+                }
+            }
+        };
+
+        // ── GAIN / PAN SETUP ─────────────────────────────────────────────────
+        function buildNodes() {
+            parts.forEach(p => {
+                if (gainNodes[p]) { try { gainNodes[p].disconnect(); } catch(e){} }
+                if (pannerNodes[p]) { try { pannerNodes[p].disconnect(); } catch(e){} }
+                gainNodes[p]   = audioContext.createGain();
+                pannerNodes[p] = audioContext.createStereoPanner();
+                gainNodes[p].connect(pannerNodes[p]);
+                pannerNodes[p].connect(audioContext.destination);
+                pannerNodes[p].pan.value = panValues[p];
+            });
+            applyAllVolumes();
+        }
+
+        function stopSources() {
+            parts.forEach(p => {
+                if (sourceNodes[p]) {
+                    sourceNodes[p].onended = null; // prevent onended firing stop()
+                    try { sourceNodes[p].stop(); } catch(e) {}
+                    try { sourceNodes[p].disconnect(); } catch(e) {}
+                    sourceNodes[p] = null;
+                }
+            });
+        }
+
+        // ── SVG ICONS ────────────────────────────────────────────────────────
+        const pauseSVG = `<svg id="playIcon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width:20px;height:20px;fill:#000;display:block;">
+            <rect x="5" y="3" width="4" height="18" rx="1"/>
+            <rect x="15" y="3" width="4" height="18" rx="1"/>
+        </svg>`;
+        const playSVG = `<svg id="playIcon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width:20px;height:20px;fill:#000;display:block;transform:translateX(2px)">
+            <polygon points="6,3 20,12 6,21"/>
+        </svg>`;
+
+        function setLoadingState(loading) {
+            const btn = document.getElementById('playBtn');
+            if (loading) {
+                btn.classList.add('loading');
+                btn.innerHTML = ''; // spinner shown via CSS ::after
+            } else {
+                btn.classList.remove('loading');
+                btn.innerHTML = isPlaying ? pauseSVG : playSVG;
+            }
+        }
+
+        // ── LOAD SONG ────────────────────────────────────────────────────────
+        // Strategy: fetch raw bytes immediately (no AudioContext needed),
+        // then decode once AudioContext is running (after user gesture).
+        // This means the spinner shows, bytes download in background,
+        // and decode is instant the moment the user interacts.
+
+        let pendingArrayBuffers = {}; // raw bytes waiting to be decoded
+
+        async function loadSong(songId) {
+            if (!songs[songId]) return;
+
+            const token = ++loadToken;
+
+            stop();
+
+            if (introAudio) { introAudio.pause(); introAudio.src = ''; introAudio = null; }
+            if (clickAudio) { clickAudio.pause(); clickAudio.src = ''; clickAudio = null; }
+
+            audioBuffers = {};
+            pendingArrayBuffers = {};
+            currentSong  = songId;
+            atStart      = true;
+            songDuration = 0;
+            playOffset   = 0;
+
+            const song = songs[songId];
+            const songFolder = song.files.soprano.substring(0, song.files.soprano.lastIndexOf('/'));
+
+            // Reset UI immediately
+            document.getElementById('progressBar').value = 0;
+            document.getElementById('currentTime').textContent = '0:00';
+            document.getElementById('duration').textContent = '0:00';
+            document.getElementById('progressBar').max = 300;
+            setLoadingState(true);
+            updateDownloadLinks(song);
+
+            // ── Phase 1: Fetch raw bytes (no AudioContext required) ───────────
+            const fetchPromises = parts.map(async p => {
+                try {
+                    const resp = await fetch(song.files[p]);
+                    if (!resp.ok) throw new Error(resp.status);
+                    const arrayBuf = await resp.arrayBuffer();
+                    if (token !== loadToken) return;
+                    pendingArrayBuffers[p] = arrayBuf;
+                } catch(e) {
+                    console.warn('Failed to fetch part', p, e);
+                }
+            });
+
+            // Fetch intro + click in parallel
+            const introPromise = (async () => {
+                try {
+                    const resp = await fetch(songFolder + '/intro.mp3');
+                    if (!resp.ok || token !== loadToken) return;
+                    const blob = await resp.blob();
+                    if (token !== loadToken) return;
+                    introAudio = new Audio(URL.createObjectURL(blob));
+                    introAudio.volume = 1.0;
+                } catch(e) {}
+            })();
+
+            const clickPromise = loadClickAudio(songFolder, token);
+
+            // Wait for all fetches to complete
+            await Promise.all([...fetchPromises, introPromise, clickPromise]);
+            if (token !== loadToken) return;
+
+            // ── Phase 2: Decode (needs AudioContext) ─────────────────────────
+            // If AudioContext is still suspended (no user gesture yet), wait for it.
+            // We register a one-time handler on the first user interaction to
+            // trigger decode, so the user never has to do anything special.
+            await decodeBuffers(token);
+        }
+
+        async function decodeBuffers(token) {
+            if (token !== loadToken) return;
+            if (Object.keys(pendingArrayBuffers).length === 0) return;
+
+            // decodeAudioData works on a suspended AudioContext in all modern browsers —
+            // suspension only blocks playback nodes, not decoding. No gesture needed.
+            buildNodes();
+            const decodePromises = parts.map(async p => {
+                if (!pendingArrayBuffers[p]) return;
+                if (token !== loadToken) return;
+                try {
+                    const decoded = await audioContext.decodeAudioData(pendingArrayBuffers[p]);
+                    if (token !== loadToken) return;
+                    audioBuffers[p] = decoded;
+                } catch(e) {
+                    console.warn('Failed to decode part', p, e);
+                }
+            });
+
+            await Promise.all(decodePromises);
+            if (token !== loadToken) return;
+
+            pendingArrayBuffers = {};
+
+            if (audioBuffers.soprano) {
+                songDuration = audioBuffers.soprano.duration;
+                document.getElementById('duration').textContent = formatTime(songDuration);
+                document.getElementById('progressBar').max = songDuration;
+                requestAnimationFrame(() => renderBarRuler(songs[currentSong].bars, songDuration));
+                setLoadingState(false);
+            }
+        }
+
+        // ── CLICK LOAD ───────────────────────────────────────────────────────
+        async function loadClickAudio(songFolder, token) {
+            if (clickAudio) { clickAudio.pause(); clickAudio.src = ''; clickAudio = null; }
+            try {
+                const url = songFolder + '/' + clickType + '.mp3';
+                const resp = await fetch(url);
+                if (!resp.ok || (token !== undefined && token !== loadToken)) return;
+                const blob = await resp.blob();
+                if (token !== undefined && token !== loadToken) return;
+                clickAudio = new Audio(URL.createObjectURL(blob));
+                clickAudio.volume = 0.5; // default 50%, unmuted
+                applyClickVolume();
+            } catch(e) { console.warn('Click load failed', e); }
+        }
+
+        // ── PLAYBACK ─────────────────────────────────────────────────────────
+        function createAndStartSources(offset) {
+            stopSources();
+            // Don't bail on suspended — resume is handled by togglePlay.
+            // If we get here during a seek, context should already be running.
+            parts.forEach(p => {
+                if (!audioBuffers[p] || !gainNodes[p]) return;
+                const src = audioContext.createBufferSource();
+                src.buffer = audioBuffers[p];
+                src.connect(gainNodes[p]);
+                src.start(0, offset);
+                sourceNodes[p] = src;
+            });
+            // Use soprano's ended event to detect song end
+            if (sourceNodes.soprano) {
+                sourceNodes.soprano.onended = () => {
+                    if (isPlaying) stop();
+                };
+            }
+        }
+
+        function play() {
+            if (!audioBuffers.soprano) return; // not loaded yet
+            createAndStartSources(playOffset);
+            playStartTime = audioContext.currentTime;
+
+            // Intro: play from current offset if not past its end
+            if (introAudio && isFinite(introAudio.duration)) {
+                if (playOffset < introAudio.duration) {
+                    introAudio.currentTime = playOffset;
+                    introAudio.play().catch(() => {});
+                }
+                // else intro already ended at this position — leave it
+            } else if (introAudio) {
+                // duration not known yet, just try from current position
+                introAudio.play().catch(() => {});
+            }
+
+            // Click: sync position then play
+            syncClickToPosition(playOffset);
+            if (clickAudio) clickAudio.play().catch(() => {});
+
+            startProgressRaf();
+            isPlaying = true;
+            document.getElementById('playBtn').innerHTML = pauseSVG;
+        }
+
+        function pause() {
+            if (!isPlaying) return;
+            // Capture current position before stopping sources
+            playOffset = getCurrentPosition();
+            stopSources();
+            cancelAnimationFrame(rafId); rafId = null;
+            if (introAudio) introAudio.pause();
+            if (clickAudio) clickAudio.pause();
+            isPlaying = false;
+            document.getElementById('playBtn').innerHTML = playSVG;
+        }
+
+        function stop() {
+            playOffset = 0;
+            stopSources();
+            cancelAnimationFrame(rafId); rafId = null;
+            if (introAudio) { introAudio.pause(); introAudio.currentTime = 0; }
+            if (clickAudio) { clickAudio.pause(); clickAudio.currentTime = 0; }
+            isPlaying = false;
+            atStart = true;
+            document.getElementById('progressBar').value = 0;
+            document.getElementById('currentTime').textContent = '0:00';
+            document.getElementById('playBtn').innerHTML = playSVG;
+        }
+
+        function getCurrentPosition() {
+            if (!isPlaying) return playOffset;
+            return playOffset + (audioContext.currentTime - playStartTime);
+        }
+
+        // ── SEEK ─────────────────────────────────────────────────────────────
+        function seekTo(t) {
+            t = Math.max(0, Math.min(t, songDuration || t));
+            playOffset = t;
+            document.getElementById('progressBar').value = t;
+            document.getElementById('currentTime').textContent = formatTime(t);
+            atStart = t < 0.5;
+
+            if (isPlaying) {
+                stopSources();
+                createAndStartSources(t);
+                playStartTime = audioContext.currentTime;
+                startProgressRaf(); // restart the RAF loop — it was cancelled in startScrub
+
+                // Intro
+                if (introAudio && isFinite(introAudio.duration)) {
+                    if (t < introAudio.duration) {
+                        introAudio.currentTime = t;
+                        introAudio.play().catch(() => {});
+                    } else {
+                        introAudio.pause();
+                    }
+                }
+
+                // Click
+                syncClickToPosition(t);
+                if (clickAudio && clickAudio.paused) clickAudio.play().catch(() => {});
+            } else {
+                // Paused: just update intro position for when play resumes
+                if (introAudio && isFinite(introAudio.duration) && t < introAudio.duration) {
+                    introAudio.currentTime = t;
+                }
+                syncClickToPosition(t);
+            }
+        }
+
+        function syncClickToPosition(t) {
+            if (!clickAudio) return;
+            if (!isFinite(clickAudio.duration) || clickAudio.duration === 0) {
+                // Duration not loaded yet — try once it is
+                clickAudio.addEventListener('loadedmetadata', () => {
+                    if (clickAudio && clickAudio.duration > 0) {
+                        clickAudio.currentTime = t % clickAudio.duration;
+                    }
+                }, { once: true });
+                return;
+            }
+            clickAudio.currentTime = t % clickAudio.duration;
+        }
+
+        // ── PROGRESS RAF ─────────────────────────────────────────────────────
+        function startProgressRaf() {
+            cancelAnimationFrame(rafId);
+            function tick() {
+                if (!isPlaying) return;
+                const t = getCurrentPosition();
+                if (!isScrubbing) {
+                    document.getElementById('currentTime').textContent = formatTime(t);
+                    document.getElementById('progressBar').value = t;
+                }
+                atStart = t < 0.5;
+                rafId = requestAnimationFrame(tick);
+            }
+            rafId = requestAnimationFrame(tick);
+        }
+
+        // ── VOLUME / PAN ─────────────────────────────────────────────────────
+        function updateVolume(part, value) {
+            if (gainNodes[part]) gainNodes[part].gain.value = value / 100;
+        }
+
+        function applyAllVolumes() {
+            const soloedParts = parts.filter(p =>
+                document.querySelector(`[data-part="${p}"] .solo-btn`).classList.contains('active')
+            );
+            const anySolo = soloedParts.length > 0;
+            parts.forEach(p => {
+                const isSoloed = soloedParts.includes(p);
+                const isMuted  = document.querySelector(`[data-part="${p}"] .mute-btn`).classList.contains('active');
+                const sliderVal = parseInt(document.querySelector(`[data-part="${p}"] .volume-slider`).value);
+                let vol;
+                if (anySolo)       { vol = isSoloed ? sliderVal : 0; }
+                else if (isMuted)  { vol = 0; }
+                else               { vol = sliderVal; }
+                updateVolume(p, vol);
+            });
+            updatePartStyles();
+        }
+
+        function updatePartStyles() {
+            const soloedParts = parts.filter(p =>
+                document.querySelector(`[data-part="${p}"] .solo-btn`).classList.contains('active')
+            );
+            const anySolo = soloedParts.length > 0;
+            parts.forEach(p => {
+                const partEl  = document.querySelector(`[data-part="${p}"]`);
+                const isSoloed = soloedParts.includes(p);
+                const isMuted  = document.querySelector(`[data-part="${p}"] .mute-btn`).classList.contains('active');
+                const effectivelyMuted = isMuted || (anySolo && !isSoloed);
+                partEl.classList.toggle('is-muted', !isSoloed && effectivelyMuted);
+            });
+        }
+
+        function applyFixedPan() {
+            parts.forEach(p => {
+                if (pannerNodes[p]) pannerNodes[p].pan.value = panValues[p];
+            });
+        }
+
+        function applyClickVolume() {
+            if (!clickAudio) return;
+            const el = document.querySelector('[data-part="click"]');
+            if (!el) return;
+            const isMuted  = el.querySelector('.mute-btn').classList.contains('active');
+            const sliderVal = parseInt(el.querySelector('.volume-slider').value);
+            clickAudio.volume = isMuted ? 0 : sliderVal / 100;
+            // Visual feedback — dim the row when muted
+            el.classList.toggle('is-muted', isMuted);
+        }
+
+        // ── SCRUB ────────────────────────────────────────────────────────────
+        function startScrub() {
+            if (isScrubbing) return;
+            isScrubbing = true;
+            if (isPlaying) {
+                playOffset = getCurrentPosition();
+                stopSources();
+                cancelAnimationFrame(rafId); rafId = null;
+            }
+            if (introAudio) introAudio.pause();
+            if (clickAudio) clickAudio.pause();
+        }
+
+        function endScrub() {
+            // Always commit the seek — don't guard on isScrubbing, because on some
+            // browsers (especially mobile) mousedown doesn't fire on range inputs,
+            // so startScrub may not have run. seekTo is safe to call regardless.
+            isScrubbing = false;
+            const t = parseFloat(document.getElementById('progressBar').value);
+            seekTo(t);
+        }
+
+        // ── FORMAT ───────────────────────────────────────────────────────────
+        function formatTime(s) {
+            if (!isFinite(s) || s < 0) s = 0;
+            const m = Math.floor(s / 60);
+            return `${m}:${String(Math.floor(s % 60)).padStart(2,'0')}`;
+        }
+
+        // ── TOGGLE PLAY ──────────────────────────────────────────────────────
+        async function togglePlay() {
+            if (!currentSong) return;
+            await audioContext.resume().catch(() => {});
+            if (!audioBuffers.soprano) return; // still loading, spinner stays
+            isPlaying ? pause() : play();
+        }
+
+
+
+
+
+        // ── SONG NAVIGATION ──────────────────────────────────────────────────
+        function getSongIds() {
+            return Array.from(document.getElementById('songSelect').options)
+                .map(o => o.value).filter(v => v !== '0');
+        }
+
+        function navigateToSong(id) {
+            document.getElementById('songSelect').value = String(id);
+            loadSong(id);
+        }
+
+        function goToNextSong() {
+            const ids = getSongIds();
+            const idx = ids.indexOf(String(currentSong));
+            if (idx === -1 || idx === ids.length - 1) return;
+            navigateToSong(ids[idx + 1]);
+        }
+
+        function goToPrevSong() {
+            const ids = getSongIds();
+            const idx = ids.indexOf(String(currentSong));
+            if (idx <= 0) return;
+            navigateToSong(ids[idx - 1]);
+        }
+
+        function handleRestart() {
+            if (!currentSong) return;
+            if (atStart) { goToPrevSong(); }
+            else         { seekTo(0); }
+        }
+
+        // ── DOWNLOAD LINKS ───────────────────────────────────────────────────
+        function updateCoverArt(song) {
+            const img = document.getElementById('coverArt');
+            img.classList.remove('loaded');
+            const src = song.cover || '';
+            if (!src) return;
+            img.onload = () => img.classList.add('loaded');
+            img.onerror = () => {}; // silently hide if missing
+            img.src = src;
+        }
+
+        function updateDownloadLinks(song) {
+            parts.forEach(part => {
+                const partEl = document.querySelector(`[data-part="${part}"]`);
+                const links  = song.downloads && song.downloads[part];
+                const btns   = partEl.querySelectorAll('.download-btn');
+                const pdfBtn = btns[0], wavBtn = btns[1];
+                if (links && links.pdf) { pdfBtn.href = links.pdf;  pdfBtn.classList.remove('unavailable'); }
+                else                    { pdfBtn.href = '#';         pdfBtn.classList.add('unavailable'); }
+                if (links && links.wav) { wavBtn.href = links.wav;  wavBtn.classList.remove('unavailable'); }
+                else                    { wavBtn.href = '#';         wavBtn.classList.add('unavailable'); }
+            });
+        }
+
+        // ── BAR RULER ────────────────────────────────────────────────────────
+        function renderBarRuler(barsData, duration) {
+            const ruler = document.getElementById('barRuler');
+            ruler.innerHTML = '';
+            if (!barsData || !duration) return;
+            const { startTime, tempo, beatsPerBar, labelEvery = 4 } = barsData;
+            const secondsPerBar = (60 / tempo) * beatsPerBar;
+            const totalBars = Math.ceil((duration - startTime) / secondsPerBar) + 1;
+            const slider = document.getElementById('progressBar');
+            const sliderRect = slider.getBoundingClientRect();
+            const rulerRect  = ruler.getBoundingClientRect();
+            const thumbRadius = 8;
+            const trackLeft  = (sliderRect.left  + thumbRadius) - rulerRect.left;
+            const trackRight = (sliderRect.right - thumbRadius) - rulerRect.left;
+            const trackWidth = trackRight - trackLeft;
+            for (let bar = 1; bar <= totalBars; bar++) {
+                const t = startTime + (bar - 1) * secondsPerBar;
+                if (t > duration + 0.01) break;
+                const px = trackLeft + (t / duration) * trackWidth;
+                const shouldLabel = (bar - 1) % labelEvery === 0;
+                const marker = document.createElement('div');
+                marker.className = 'bar-marker' + (shouldLabel ? ' numbered' : '');
+                marker.style.left = px + 'px';
+                const num = document.createElement('div');
+                num.className = 'bar-number';
+                num.textContent = shouldLabel ? bar : '';
+                const tick = document.createElement('div');
+                tick.className = 'bar-tick';
+                marker.appendChild(num);
+                marker.appendChild(tick);
+                ruler.appendChild(marker);
+            }
+        }
+
+        // ── PART UI EVENT LISTENERS ──────────────────────────────────────────
+        document.querySelectorAll('.part:not([data-part="click"])').forEach(partEl => {
+            const partName    = partEl.dataset.part;
+            const volumeSlider = partEl.querySelector('.volume-slider');
+            const volumeValue  = partEl.querySelector('.volume-value');
+            const soloBtn      = partEl.querySelector('.solo-btn');
+            const prominentBtn = partEl.querySelector('.prominent-btn');
+            const muteBtn      = partEl.querySelector('.mute-btn');
+
+            partEl.addEventListener('dblclick', (e) => {
+                if (e.target.closest('button, input')) return;
+                volumeSlider.value = 100;
+                volumeValue.textContent = '100%';
+                applyAllVolumes();
+            });
+
+            volumeSlider.addEventListener('input', (e) => {
+                volumeValue.textContent = e.target.value + '%';
+                applyAllVolumes();
+            });
+
+            soloBtn.addEventListener('click', () => {
+                const isSolo = soloBtn.classList.contains('active');
+                if (!isSolo) {
+                    muteBtn.classList.remove('active');
+                    document.querySelectorAll('.prominent-btn').forEach(b => b.classList.remove('active'));
+                }
+                soloBtn.classList.toggle('active');
+                applyAllVolumes();
+            });
+
+            prominentBtn.addEventListener('click', () => {
+                const isProminent = prominentBtn.classList.contains('active');
+                document.querySelectorAll('.part:not([data-part="click"]) .solo-btn, .prominent-btn').forEach(b => b.classList.remove('active'));
+                if (!isProminent) {
+                    prominentBtn.classList.add('active');
+                    parts.forEach(p => {
+                        const pEl    = document.querySelector(`[data-part="${p}"]`);
+                        const slider = pEl.querySelector('.volume-slider');
+                        const disp   = pEl.querySelector('.volume-value');
+                        pEl.querySelector('.mute-btn').classList.remove('active');
+                        if (p === partName) { slider.value = 100; disp.textContent = '100%'; }
+                        else               { slider.value = 20;  disp.textContent = '20%';  }
+                    });
+                }
+                applyAllVolumes();
+            });
+
+            muteBtn.addEventListener('click', () => {
+                const isMuted = muteBtn.classList.contains('active');
+                if (!isMuted) soloBtn.classList.remove('active');
+                muteBtn.classList.toggle('active');
+                applyAllVolumes();
+            });
+        });
+
+        // Reset button
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            document.querySelectorAll('.solo-btn, .prominent-btn, .mute-btn').forEach(b => b.classList.remove('active'));
+            parts.forEach(p => {
+                document.querySelector(`[data-part="${p}"] .volume-slider`).value = 100;
+                document.querySelector(`[data-part="${p}"] .volume-value`).textContent = '100%';
+            });
+            const clickEl = document.querySelector('[data-part="click"]');
+            clickEl.querySelector('.mute-btn').classList.remove('active');
+            clickEl.querySelector('.volume-slider').value = 50;
+            clickEl.querySelector('.volume-value').textContent = '50%';
+            applyAllVolumes();
+            applyClickVolume();
+        });
+
+        // ── CLICK PART LISTENERS ─────────────────────────────────────────────
+        (function() {
+            const clickEl  = document.querySelector('[data-part="click"]');
+            const slider   = clickEl.querySelector('.volume-slider');
+            const display  = clickEl.querySelector('.volume-value');
+            const muteBtn  = clickEl.querySelector('.mute-btn');
+
+            clickEl.addEventListener('dblclick', (e) => {
+                if (e.target.closest('button, input, select')) return;
+                slider.value = 100; display.textContent = '100%';
+                applyClickVolume();
+            });
+            slider.addEventListener('input', (e) => {
+                display.textContent = e.target.value + '%';
+                applyClickVolume();
+            });
+            muteBtn.addEventListener('click', () => {
+                muteBtn.classList.toggle('active');
+                applyClickVolume();
+            });
+            document.getElementById('clickTypeSelect').addEventListener('change', (e) => {
+                clickType = e.target.value;
+                if (!currentSong) return;
+                const song = songs[currentSong];
+                const folder = song.files.soprano.substring(0, song.files.soprano.lastIndexOf('/'));
+                const wasPlaying = isPlaying;
+                if (wasPlaying && clickAudio) clickAudio.pause();
+                loadClickAudio(folder, undefined).then(() => {
+                    applyClickVolume();
+                    if (wasPlaying && clickAudio) {
+                        syncClickToPosition(getCurrentPosition());
+                        clickAudio.play().catch(() => {});
+                    }
+                });
+            });
+        })();
+
+        // ── TRANSPORT BUTTONS ────────────────────────────────────────────────
+        document.getElementById('playBtn').addEventListener('click', togglePlay);
+        document.getElementById('restartBtn').addEventListener('click', handleRestart);
+        document.getElementById('nextBtn').addEventListener('click', goToNextSong);
+
+        // ── PROGRESS BAR SCRUB ───────────────────────────────────────────────
+        // Use a unified approach: mousedown/touchstart starts scrub,
+        // input updates display, mouseup/touchend commits the seek.
+        // We read the slider value at commit time — by then the browser
+        // has always updated it, even for a click with no drag.
+        const progressBar = document.getElementById('progressBar');
+
+        // startScrub: fires on mousedown (desktop) or first 'input' (iOS — touchstart
+        // doesn't fire on range inputs on iOS, but input does on first movement).
+        progressBar.addEventListener('mousedown', startScrub);
+        progressBar.addEventListener('touchstart', startScrub, { passive: true });
+        // Belt-and-suspenders for iOS: also start scrub on first input movement
+        progressBar.addEventListener('input', (e) => {
+            if (!isScrubbing) startScrub(); // iOS fallback
+            const t = parseFloat(e.target.value);
+            document.getElementById('currentTime').textContent = formatTime(t);
+        });
+
+        // endScrub: 'change' fires reliably on all platforms after value finalised.
+        // mouseup/touchend as additional safety net. scrubEnded flag prevents double-fire.
+        let scrubEnded = false;
+        progressBar.addEventListener('change', () => { scrubEnded = true; endScrub(); });
+        progressBar.addEventListener('mouseup', () => { if (!scrubEnded) endScrub(); scrubEnded = false; });
+        progressBar.addEventListener('touchend', () => { if (!scrubEnded) endScrub(); scrubEnded = false; });
+
+        // ── BAR RULER SEEK ───────────────────────────────────────────────────
+        (function() {
+            const ruler = document.getElementById('barRuler');
+            let isDragging = false;
+
+            function seekFromRulerEvent(e) {
+                if (!songDuration || !currentSong) return;
+                const progressBar = document.getElementById('progressBar');
+                const rect       = ruler.getBoundingClientRect();
+                const sliderRect = progressBar.getBoundingClientRect();
+                const thumbRadius = 8;
+                const trackLeft  = (sliderRect.left  + thumbRadius) - rect.left;
+                const trackRight = (sliderRect.right - thumbRadius) - rect.left;
+                const trackWidth = trackRight - trackLeft;
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const x = clientX - rect.left;
+                const fraction = Math.max(0, Math.min(1, (x - trackLeft) / trackWidth));
+                const t = fraction * songDuration;
+                progressBar.value = t;
+                document.getElementById('currentTime').textContent = formatTime(t);
+            }
+
+            ruler.addEventListener('mousedown',  (e) => { isDragging = true; startScrub(); seekFromRulerEvent(e); });
+            ruler.addEventListener('touchstart',  (e) => { isDragging = true; startScrub(); seekFromRulerEvent(e); }, { passive: true });
+            window.addEventListener('mousemove',  (e) => { if (isDragging) seekFromRulerEvent(e); });
+            window.addEventListener('touchmove',  (e) => { if (isDragging) seekFromRulerEvent(e); }, { passive: true });
+            window.addEventListener('mouseup',    ()  => { if (isDragging) { isDragging = false; endScrub(); } });
+            window.addEventListener('touchend',   ()  => { if (isDragging) { isDragging = false; endScrub(); } });
+        })();
+
+        // ── SONG SELECT ──────────────────────────────────────────────────────
+        document.getElementById('songSelect').addEventListener('change', (e) => {
+            if (e.target.value !== '0') loadSong(e.target.value);
+        });
+
+        // ── RESIZE ───────────────────────────────────────────────────────────
+        window.addEventListener('resize', () => {
+            if (!currentSong || !songDuration) return;
+            requestAnimationFrame(() => renderBarRuler(songs[currentSong].bars, songDuration));
+        });
+
+        // ── THEME TOGGLE ─────────────────────────────────────────────────────
+        const moonSVG = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z"/></svg>`;
+        const sunSVG  = `<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="12" y1="21" x2="12" y2="23" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="1" y1="12" x2="3" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="21" y1="12" x2="23" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
+
+        const themeBtn = document.getElementById('themeBtn');
+        const logoImg  = document.querySelector('.header img');
+        let isLight = false;
+        themeBtn.addEventListener('click', () => {
+            isLight = !isLight;
+            document.body.classList.toggle('light', isLight);
+            themeBtn.innerHTML = isLight ? sunSVG : moonSVG;
+            logoImg.src = isLight ? 'images/logo-light.png' : 'images/logo-dark.png';
+        });
+
+        // ── BOOT ─────────────────────────────────────────────────────────────
+        loadSong(1);
+
+    </script>
+</body>
+</html>
