@@ -174,7 +174,7 @@
         }
 
         .part {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.16);
             border-radius: 12px;
             padding: 13px 16px;
             cursor: default;
@@ -248,8 +248,13 @@
             background: transparent;
             outline: none;
             -webkit-appearance: none;
+            -webkit-tap-highlight-color: transparent;
             cursor: pointer;
         }
+
+        .volume-slider:focus { outline: none; }
+        .volume-slider::-webkit-slider-thumb:focus { outline: none; }
+        .volume-slider:active { outline: none; }
 
         .volume-slider::-webkit-slider-runnable-track {
             height: 4px;
@@ -1374,16 +1379,15 @@
         }
 
         // ── PLAYBACK ─────────────────────────────────────────────────────────
-        function createAndStartSources(offset) {
+        function createAndStartSources(offset, startAt) {
             stopSources();
-            // Don't bail on suspended — resume is handled by togglePlay.
-            // If we get here during a seek, context should already be running.
+            const when = (startAt !== undefined) ? startAt : 0;
             parts.forEach(p => {
                 if (!audioBuffers[p] || !gainNodes[p]) return;
                 const src = audioContext.createBufferSource();
                 src.buffer = audioBuffers[p];
                 src.connect(gainNodes[p]);
-                src.start(0, offset);
+                src.start(when, offset);
                 sourceNodes[p] = src;
             });
             // Use soprano's ended event to detect song end
@@ -1396,24 +1400,29 @@
 
         function play() {
             if (!audioBuffers.soprano) return; // not loaded yet
-            createAndStartSources(playOffset);
-            playStartTime = audioContext.currentTime;
 
-            // Intro: play from current offset if not past its end
+            // Schedule everything from the same future timestamp so HTMLAudioElement
+            // (intro/click) and AudioBufferSourceNodes start in sync.
+            // HTMLAudioElement.play() has significant latency on Android, so we
+            // call it first and use a small schedule offset for the AudioContext sources.
+            const scheduleOffset = 0.08; // 80ms lookahead
+            const startAt = audioContext.currentTime + scheduleOffset;
+
+            // Start intro and click immediately (they need the head-start)
             if (introAudio && isFinite(introAudio.duration)) {
                 if (playOffset < introAudio.duration) {
                     introAudio.currentTime = playOffset;
                     introAudio.play().catch(() => {});
                 }
-                // else intro already ended at this position — leave it
             } else if (introAudio) {
-                // duration not known yet, just try from current position
                 introAudio.play().catch(() => {});
             }
-
-            // Click: sync position then play
             syncClickToPosition(playOffset);
             if (clickAudio) clickAudio.play().catch(() => {});
+
+            // Schedule AudioContext sources to start at startAt
+            createAndStartSources(playOffset, startAt);
+            playStartTime = startAt;
 
             startProgressRaf();
             isPlaying = true;
