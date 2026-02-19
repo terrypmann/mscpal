@@ -927,9 +927,13 @@
         let songDuration   = 0;    // duration of current song in seconds
         let loadToken      = 0;    // incremented on each loadSong to cancel stale loads
 
-        // Intro + click remain plain <audio> — no panning needed, simpler is fine
-        let introAudio     = null;
-        let clickAudio     = null;
+        // Intro + click now use AudioBufferSourceNode for perfect sync with main parts
+        let introBuffer    = null;
+        let clickBuffer    = null;
+        let introGain      = null;
+        let clickGain      = null;
+        let introSource    = null;
+        let clickSource    = null;
         let clickType      = 'digital';
 
         const songs = {
@@ -1236,6 +1240,23 @@
             });
         }
 
+        function stopIntroSource() {
+            if (introSource) {
+                introSource.onended = null;
+                try { introSource.stop(); } catch(e) {}
+                try { introSource.disconnect(); } catch(e) {}
+                introSource = null;
+            }
+        }
+
+        function stopClickSource() {
+            if (clickSource) {
+                try { clickSource.stop(); } catch(e) {}
+                try { clickSource.disconnect(); } catch(e) {}
+                clickSource = null;
+            }
+        }
+
         // ── SVG ICONS ────────────────────────────────────────────────────────
         const pauseSVG = `<svg id="playIcon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width:20px;height:20px;fill:#000;display:block;">
             <rect x="5" y="3" width="4" height="18" rx="1"/>
@@ -1271,8 +1292,10 @@
 
             stop();
 
-            if (introAudio) { introAudio.pause(); introAudio.src = ''; introAudio = null; }
-            if (clickAudio) { clickAudio.pause(); clickAudio.src = ''; clickAudio = null; }
+            stopIntroSource();
+            stopClickSource();
+            introBuffer = null;
+            clickBuffer = null;
 
             audioBuffers = {};
             pendingArrayBuffers = {};
@@ -1310,10 +1333,15 @@
                 try {
                     const resp = await fetch(songFolder + '/intro.mp3');
                     if (!resp.ok || token !== loadToken) return;
-                    const blob = await resp.blob();
+                    const arrayBuf = await resp.arrayBuffer();
                     if (token !== loadToken) return;
-                    introAudio = new Audio(URL.createObjectURL(blob));
-                    introAudio.volume = 1.0;
+                    introBuffer = await audioContext.decodeAudioData(arrayBuf);
+                    if (token !== loadToken) { introBuffer = null; return; }
+                    if (!introGain) {
+                        introGain = audioContext.createGain();
+                        introGain.gain.value = 1.0;
+                        introGain.connect(audioContext.destination);
+                    }
                 } catch(e) {}
             })();
 
@@ -1365,15 +1393,20 @@
 
         // ── CLICK LOAD ───────────────────────────────────────────────────────
         async function loadClickAudio(songFolder, token) {
-            if (clickAudio) { clickAudio.pause(); clickAudio.src = ''; clickAudio = null; }
+            stopClickSource();
+            clickBuffer = null;
             try {
                 const url = songFolder + '/' + clickType + '.mp3';
                 const resp = await fetch(url);
                 if (!resp.ok || (token !== undefined && token !== loadToken)) return;
-                const blob = await resp.blob();
+                const arrayBuf = await resp.arrayBuffer();
                 if (token !== undefined && token !== loadToken) return;
-                clickAudio = new Audio(URL.createObjectURL(blob));
-                clickAudio.volume = 0.5; // default 50%, unmuted
+                clickBuffer = await audioContext.decodeAudioData(arrayBuf);
+                if (token !== undefined && token !== loadToken) { clickBuffer = null; return; }
+                if (!clickGain) {
+                    clickGain = audioContext.createGain();
+                    clickGain.connect(audioContext.destination);
+                }
                 applyClickVolume();
             } catch(e) { console.warn('Click load failed', e); }
         }
@@ -1399,31 +1432,32 @@
         }
 
         function play() {
-            if (!audioBuffers.soprano) return; // not loaded yet
+            if (!audioBuffers.soprano) return;
 
-            // Schedule everything from the same future timestamp so HTMLAudioElement
-            // (intro/click) and AudioBufferSourceNodes start in sync.
-            // HTMLAudioElement.play() has significant latency on Android, so we
-            // call it first and use a small schedule offset for the AudioContext sources.
-            const scheduleOffset = 0.08; // 80ms lookahead
-            const startAt = audioContext.currentTime + scheduleOffset;
-
-            // Start intro and click immediately (they need the head-start)
-            if (introAudio && isFinite(introAudio.duration)) {
-                if (playOffset < introAudio.duration) {
-                    introAudio.currentTime = playOffset;
-                    introAudio.play().catch(() => {});
-                }
-            } else if (introAudio) {
-                introAudio.play().catch(() => {});
-            }
-            syncClickToPosition(playOffset);
-            if (clickAudio) clickAudio.play().catch(() => {});
-
-            // Schedule AudioContext sources to start at startAt
+            // All sources start at the exact same AudioContext timestamp = perfect sync
+            const startAt = audioContext.currentTime + 0.05;
             createAndStartSources(playOffset, startAt);
-            playStartTime = startAt;
 
+            // Intro: play once from current offset
+            stopIntroSource();
+            if (introBuffer && introGain && playOffset < introBuffer.duration) {
+                introSource = audioContext.createBufferSource();
+                introSource.buffer = introBuffer;
+                introSource.connect(introGain);
+                introSource.start(startAt, playOffset);
+            }
+
+            // Click: loop continuously from correct beat position
+            stopClickSource();
+            if (clickBuffer && clickGain) {
+                clickSource = audioContext.createBufferSource();
+                clickSource.buffer = clickBuffer;
+                clickSource.loop = true;
+                clickSource.connect(clickGain);
+                clickSource.start(startAt, playOffset % clickBuffer.duration);
+            }
+
+            playStartTime = startAt;
             startProgressRaf();
             isPlaying = true;
             document.getElementById('playBtn').innerHTML = pauseSVG;
@@ -1431,12 +1465,11 @@
 
         function pause() {
             if (!isPlaying) return;
-            // Capture current position before stopping sources
             playOffset = getCurrentPosition();
             stopSources();
+            stopIntroSource();
+            stopClickSource();
             cancelAnimationFrame(rafId); rafId = null;
-            if (introAudio) introAudio.pause();
-            if (clickAudio) clickAudio.pause();
             isPlaying = false;
             document.getElementById('playBtn').innerHTML = playSVG;
         }
@@ -1444,9 +1477,9 @@
         function stop() {
             playOffset = 0;
             stopSources();
+            stopIntroSource();
+            stopClickSource();
             cancelAnimationFrame(rafId); rafId = null;
-            if (introAudio) { introAudio.pause(); introAudio.currentTime = 0; }
-            if (clickAudio) { clickAudio.pause(); clickAudio.currentTime = 0; }
             isPlaying = false;
             atStart = true;
             document.getElementById('progressBar').value = 0;
@@ -1469,45 +1502,31 @@
 
             if (isPlaying) {
                 stopSources();
-                createAndStartSources(t);
-                playStartTime = audioContext.currentTime;
-                startProgressRaf(); // restart the RAF loop — it was cancelled in startScrub
+                stopIntroSource();
+                stopClickSource();
+                const startAt = audioContext.currentTime + 0.05;
+                createAndStartSources(t, startAt);
 
-                // Intro
-                if (introAudio && isFinite(introAudio.duration)) {
-                    if (t < introAudio.duration) {
-                        introAudio.currentTime = t;
-                        introAudio.play().catch(() => {});
-                    } else {
-                        introAudio.pause();
-                    }
+                if (introBuffer && introGain && t < introBuffer.duration) {
+                    introSource = audioContext.createBufferSource();
+                    introSource.buffer = introBuffer;
+                    introSource.connect(introGain);
+                    introSource.start(startAt, t);
                 }
 
-                // Click
-                syncClickToPosition(t);
-                if (clickAudio && clickAudio.paused) clickAudio.play().catch(() => {});
-            } else {
-                // Paused: just update intro position for when play resumes
-                if (introAudio && isFinite(introAudio.duration) && t < introAudio.duration) {
-                    introAudio.currentTime = t;
+                if (clickBuffer && clickGain) {
+                    clickSource = audioContext.createBufferSource();
+                    clickSource.buffer = clickBuffer;
+                    clickSource.loop = true;
+                    clickSource.connect(clickGain);
+                    clickSource.start(startAt, t % clickBuffer.duration);
                 }
-                syncClickToPosition(t);
+
+                playStartTime = startAt;
+                startProgressRaf();
             }
         }
 
-        function syncClickToPosition(t) {
-            if (!clickAudio) return;
-            if (!isFinite(clickAudio.duration) || clickAudio.duration === 0) {
-                // Duration not loaded yet — try once it is
-                clickAudio.addEventListener('loadedmetadata', () => {
-                    if (clickAudio && clickAudio.duration > 0) {
-                        clickAudio.currentTime = t % clickAudio.duration;
-                    }
-                }, { once: true });
-                return;
-            }
-            clickAudio.currentTime = t % clickAudio.duration;
-        }
 
         // ── PROGRESS RAF ─────────────────────────────────────────────────────
         function startProgressRaf() {
@@ -1569,13 +1588,11 @@
         }
 
         function applyClickVolume() {
-            if (!clickAudio) return;
             const el = document.querySelector('[data-part="click"]');
             if (!el) return;
             const isMuted  = el.querySelector('.mute-btn').classList.contains('active');
             const sliderVal = parseInt(el.querySelector('.volume-slider').value);
-            clickAudio.volume = isMuted ? 0 : sliderVal / 100;
-            // Visual feedback — dim the row when muted
+            if (clickGain) clickGain.gain.value = isMuted ? 0 : sliderVal / 100;
             el.classList.toggle('is-muted', isMuted);
         }
 
@@ -1588,8 +1605,8 @@
                 stopSources();
                 cancelAnimationFrame(rafId); rafId = null;
             }
-            if (introAudio) introAudio.pause();
-            if (clickAudio) clickAudio.pause();
+            stopIntroSource();
+            stopClickSource();
         }
 
         function endScrub() {
@@ -1806,12 +1823,17 @@
                 const song = songs[currentSong];
                 const folder = song.files.soprano.substring(0, song.files.soprano.lastIndexOf('/'));
                 const wasPlaying = isPlaying;
-                if (wasPlaying && clickAudio) clickAudio.pause();
+                if (wasPlaying) stopClickSource();
                 loadClickAudio(folder, undefined).then(() => {
                     applyClickVolume();
-                    if (wasPlaying && clickAudio) {
-                        syncClickToPosition(getCurrentPosition());
-                        clickAudio.play().catch(() => {});
+                    if (wasPlaying && clickBuffer && clickGain) {
+                        const t = getCurrentPosition();
+                        const startAt = audioContext.currentTime + 0.05;
+                        clickSource = audioContext.createBufferSource();
+                        clickSource.buffer = clickBuffer;
+                        clickSource.loop = true;
+                        clickSource.connect(clickGain);
+                        clickSource.start(startAt, t % clickBuffer.duration);
                     }
                 });
             });
