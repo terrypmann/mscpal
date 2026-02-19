@@ -180,6 +180,7 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
+            margin-bottom: 10px;
         }
 
         .part {
@@ -307,14 +308,6 @@
         }
 
         /* RESET + THEME TOGGLE */
-        .reset-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 8px;
-            margin-top: 14px;
-            margin-bottom: 4px;
-        }
 
         .reset-btn {
             height: 34px;
@@ -407,11 +400,18 @@
 
         .transport-buttons {
             display: flex;
-            gap: 12px;
-            justify-content: center;
-            margin-top: auto;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 14px;
             margin-bottom: 0;
             padding-bottom: 4px;
+        }
+
+        .transport-trio {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            padding: 0 24px;
         }
 
         .transport-btn {
@@ -840,15 +840,7 @@
                 </div>
             </div>
 
-            <div class="reset-container">
-                <button id="resetBtn" class="reset-btn">Reset</button>
-                <button id="themeBtn" class="theme-btn" aria-label="Toggle light/dark mode">
-                    <!-- moon icon (shown in dark mode) -->
-                    <svg id="themeIcon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z"/>
-                    </svg>
-                </button>
-            </div>
+
         </div>
 
         <div class="transport">
@@ -873,24 +865,32 @@
                         </select>
                     </div>
                     <div class="transport-buttons">
-                        <!-- Previous / restart -->
-                        <button class="transport-btn" id="restartBtn" aria-label="Previous / Restart">
-                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <rect x="4" y="4" width="2.5" height="16" rx="1"/>
-                                <polygon points="19,4 8,12 19,20"/>
-                            </svg>
-                        </button>
-                        <!-- Play / Pause -->
-                        <button class="transport-btn play-btn" id="playBtn" aria-label="Play / Pause">
-                            <svg id="playIcon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <polygon points="6,3 20,12 6,21"/>
-                            </svg>
-                        </button>
-                        <!-- Next -->
-                        <button class="transport-btn" id="nextBtn" aria-label="Next Song">
-                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <polygon points="5,4 16,12 5,20"/>
-                                <rect x="17.5" y="4" width="2.5" height="16" rx="1"/>
+                        <button id="resetBtn" class="reset-btn">Reset</button>
+                        <div class="transport-trio">
+                            <!-- Previous / restart -->
+                            <button class="transport-btn" id="restartBtn" aria-label="Previous / Restart">
+                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <rect x="4" y="4" width="2.5" height="16" rx="1"/>
+                                    <polygon points="19,4 8,12 19,20"/>
+                                </svg>
+                            </button>
+                            <!-- Play / Pause -->
+                            <button class="transport-btn play-btn" id="playBtn" aria-label="Play / Pause">
+                                <svg id="playIcon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <polygon points="6,3 20,12 6,21"/>
+                                </svg>
+                            </button>
+                            <!-- Next -->
+                            <button class="transport-btn" id="nextBtn" aria-label="Next Song">
+                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <polygon points="5,4 16,12 5,20"/>
+                                    <rect x="17.5" y="4" width="2.5" height="16" rx="1"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <button id="themeBtn" class="theme-btn" aria-label="Toggle light/dark mode">
+                            <svg id="themeIcon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z"/>
                             </svg>
                         </button>
                     </div>
@@ -967,10 +967,10 @@
                 },
                 downloads: {
                     soprano:  { pdf: "", mp3: "" },
-                    mezzo:    { pdf: "", mp3: "https://drive.google.com/uc?export=download&id=" },
+                    mezzo:    { pdf: "", mp3: "" },
                     alto:     { pdf: "", mp3: "" },
                     tenor:    { pdf: "", mp3: "" },
-                    baritone: { pdf: "https://drive.google.com/uc?export=download&id=1vtVE_QyWJK0ncE9tGXjzwRwc2mQise2-", mp3: "https://drive.google.com/uc?export=download&id=1uE7ww0rhxWDeli6ulBAH7bAzMppnWO8z" }
+                    baritone: { pdf: "", mp3: "" }
                 }
             },
             2: {
