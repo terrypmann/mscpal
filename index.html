@@ -1835,22 +1835,25 @@
                 const song = songs[currentSong];
                 const folder = song.files.soprano.substring(0, song.files.soprano.lastIndexOf('/'));
                 const wasPlaying = isPlaying;
-                // Snapshot position NOW before async decode starts
                 const switchTime = audioContext.currentTime;
                 const switchOffset = getCurrentPosition();
                 if (wasPlaying) stopClickSource();
                 loadClickAudio(folder, undefined).then(() => {
                     applyClickVolume();
                     if (wasPlaying && clickBuffer && clickGain) {
-                        // Calculate how much time has elapsed during decode
+                        // Total song position accounting for decode time
                         const elapsed = audioContext.currentTime - switchTime;
                         const t = switchOffset + elapsed;
-                        const startAt = audioContext.currentTime + 0.05;
+                        // Schedule 150ms ahead — generous enough for Android decode latency
+                        const lookahead = 0.15;
+                        const startAt = audioContext.currentTime + lookahead;
+                        // Offset into the click loop at the moment startAt arrives
+                        const clickOffset = (t + lookahead) % clickBuffer.duration;
                         clickSource = audioContext.createBufferSource();
                         clickSource.buffer = clickBuffer;
                         clickSource.loop = true;
                         clickSource.connect(clickGain);
-                        clickSource.start(startAt, t % clickBuffer.duration);
+                        clickSource.start(startAt, clickOffset);
                     }
                 });
             });
