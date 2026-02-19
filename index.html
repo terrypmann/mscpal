@@ -1835,11 +1835,16 @@
                 const song = songs[currentSong];
                 const folder = song.files.soprano.substring(0, song.files.soprano.lastIndexOf('/'));
                 const wasPlaying = isPlaying;
+                // Snapshot position NOW before async decode starts
+                const switchTime = audioContext.currentTime;
+                const switchOffset = getCurrentPosition();
                 if (wasPlaying) stopClickSource();
                 loadClickAudio(folder, undefined).then(() => {
                     applyClickVolume();
                     if (wasPlaying && clickBuffer && clickGain) {
-                        const t = getCurrentPosition();
+                        // Calculate how much time has elapsed during decode
+                        const elapsed = audioContext.currentTime - switchTime;
+                        const t = switchOffset + elapsed;
                         const startAt = audioContext.currentTime + 0.05;
                         clickSource = audioContext.createBufferSource();
                         clickSource.buffer = clickBuffer;
