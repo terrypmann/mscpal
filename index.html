@@ -602,57 +602,19 @@
             border: none;
         }
 
-        .part-downloads {
+        /* AUTOPLAY BUTTON */
+        .autoplay-container {
             display: flex;
-            gap: 5px;
-            flex-shrink: 0;
+            justify-content: center;
+            margin-top: 12px;
         }
 
-        .download-btn {
-            padding: 4px 7px;
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 5px;
+        .autoplay-btn {
             font-size: 10px;
-            font-weight: 700;
-            letter-spacing: 0.4px;
-            cursor: pointer;
-            text-decoration: none;
-            color: rgba(255,255,255,0.45);
-            background: transparent;
-            transition: all 0.15s;
-            line-height: 1;
-            display: flex;
-            align-items: center;
+            padding: 4px 10px;
         }
-
-        .download-btn:hover {
-            color: #fff;
-            border-color: rgba(255,255,255,0.5);
-            background: rgba(255,255,255,0.08);
-        }
-
-        .download-btn.unavailable {
-            opacity: 0.2;
-            pointer-events: none;
-        }
-
-        body.light .download-btn {
-            color: rgba(0,0,0,0.35);
-            border-color: rgba(0,0,0,0.18);
-        }
-        body.light .download-btn:hover {
-            color: #111;
-            border-color: rgba(0,0,0,0.45);
-            background: rgba(0,0,0,0.06);
-        }
-        body.light .download-btn.unavailable { opacity: 0.2; }
 
         /* CLICK PART dropdown */
-        /* Click row spacer layout */
-        .click-downloads-spacer {
-            /* mirror .part-downloads so slider right-edge aligns */
-            flex-shrink: 0;
-        }
         .click-select {
             flex: 1;
             min-width: 0;
@@ -712,8 +674,7 @@
             }
             .part-name { width: auto; font-size: 13px; }
             .btn { padding: 5px 9px; font-size: 11px; }
-            .part-downloads { gap: 4px; }
-            .download-btn { font-size: 9px; padding: 3px 6px; }
+
         }
     </style>
 </head>
@@ -738,10 +699,6 @@
                     <input type="range" class="volume-slider" min="0" max="100" value="100">
                     <div class="volume-value">100%</div>
                 </div>
-                <div class="part-downloads">
-                    <a class="download-btn" href="#" target="_blank" rel="noopener">PDF</a>
-                    <a class="download-btn" href="#" target="_blank" rel="noopener">MP3</a>
-                </div>
             </div>
 
             <div class="part" data-part="mezzo">
@@ -756,10 +713,6 @@
                 <div class="volume-control">
                     <input type="range" class="volume-slider" min="0" max="100" value="100">
                     <div class="volume-value">100%</div>
-                </div>
-                <div class="part-downloads">
-                    <a class="download-btn" href="#" target="_blank" rel="noopener">PDF</a>
-                    <a class="download-btn" href="#" target="_blank" rel="noopener">MP3</a>
                 </div>
             </div>
 
@@ -776,10 +729,6 @@
                     <input type="range" class="volume-slider" min="0" max="100" value="100">
                     <div class="volume-value">100%</div>
                 </div>
-                <div class="part-downloads">
-                    <a class="download-btn" href="#" target="_blank" rel="noopener">PDF</a>
-                    <a class="download-btn" href="#" target="_blank" rel="noopener">MP3</a>
-                </div>
             </div>
 
             <div class="part" data-part="tenor">
@@ -795,10 +744,6 @@
                     <input type="range" class="volume-slider" min="0" max="100" value="100">
                     <div class="volume-value">100%</div>
                 </div>
-                <div class="part-downloads">
-                    <a class="download-btn" href="#" target="_blank" rel="noopener">PDF</a>
-                    <a class="download-btn" href="#" target="_blank" rel="noopener">MP3</a>
-                </div>
             </div>
 
             <div class="part" data-part="baritone">
@@ -813,10 +758,6 @@
                 <div class="volume-control">
                     <input type="range" class="volume-slider" min="0" max="100" value="100">
                     <div class="volume-value">100%</div>
-                </div>
-                <div class="part-downloads">
-                    <a class="download-btn" href="#" target="_blank" rel="noopener">PDF</a>
-                    <a class="download-btn" href="#" target="_blank" rel="noopener">MP3</a>
                 </div>
             </div>
 
@@ -835,10 +776,6 @@
                 <div class="volume-control">
                     <input type="range" class="volume-slider" min="0" max="100" value="50">
                     <div class="volume-value">50%</div>
-                </div>
-                <div class="part-downloads click-downloads-spacer">
-                    <a class="download-btn" style="visibility:hidden">PDF</a>
-                    <a class="download-btn" style="visibility:hidden">MP3</a>
                 </div>
             </div>
 
@@ -906,6 +843,9 @@
                 <input type="range" class="progress-bar" id="progressBar" min="0" max="100" value="0">
                 <div class="time-display" id="duration">0:00</div>
             </div>
+            <div class="autoplay-container">
+                <button class="btn autoplay-btn" id="autoplayBtn">Autoplay next song</button>
+            </div>
         </div>
     </div>
 
@@ -942,6 +882,7 @@
         let rafId          = null; // requestAnimationFrame id for progress updates
         let songDuration   = 0;    // duration of current song in seconds
         let loadToken      = 0;    // incremented on each loadSong to cancel stale loads
+        let autoplayEnabled = false; // toggled by the Autoplay button
 
         // Intro + click now use AudioBufferSourceNode for perfect sync with main parts
         let introBuffer    = null;
@@ -1301,7 +1242,7 @@
 
         let pendingArrayBuffers = {}; // raw bytes waiting to be decoded
 
-        async function loadSong(songId) {
+        async function loadSong(songId, autoplayAfterLoad = false) {
             if (!songs[songId]) return;
 
             const token = ++loadToken;
@@ -1329,7 +1270,6 @@
             document.getElementById('duration').textContent = '0:00';
             document.getElementById('progressBar').max = 300;
             setLoadingState(true);
-            updateDownloadLinks(song);
 
             // ── Phase 1: Fetch raw bytes (no AudioContext required) ───────────
             const fetchPromises = parts.map(async p => {
@@ -1371,10 +1311,10 @@
             // If AudioContext is still suspended (no user gesture yet), wait for it.
             // We register a one-time handler on the first user interaction to
             // trigger decode, so the user never has to do anything special.
-            await decodeBuffers(token);
+            await decodeBuffers(token, autoplayAfterLoad);
         }
 
-        async function decodeBuffers(token) {
+        async function decodeBuffers(token, autoplayAfterLoad = false) {
             if (token !== loadToken) return;
             if (Object.keys(pendingArrayBuffers).length === 0) return;
 
@@ -1404,6 +1344,10 @@
                 document.getElementById('progressBar').max = songDuration;
                 requestAnimationFrame(() => renderBarRuler(songs[currentSong].bars, songDuration));
                 setLoadingState(false);
+                if (autoplayAfterLoad) {
+                    await audioContext.resume().catch(() => {});
+                    play();
+                }
             }
         }
 
@@ -1442,7 +1386,18 @@
             // Use soprano's ended event to detect song end
             if (sourceNodes.soprano) {
                 sourceNodes.soprano.onended = () => {
-                    if (isPlaying) stop();
+                    if (isPlaying) {
+                        stop();
+                        if (autoplayEnabled) {
+                            const ids = getSongIds();
+                            const idx = ids.indexOf(String(currentSong));
+                            if (idx !== -1 && idx < ids.length - 1) {
+                                const nextId = ids[idx + 1];
+                                document.getElementById('songSelect').value = String(nextId);
+                                loadSong(nextId, true); // true = autoplay after load
+                            }
+                        }
+                    }
                 };
             }
         }
@@ -1684,30 +1639,6 @@
             else         { seekTo(0); }
         }
 
-        // ── DOWNLOAD LINKS ───────────────────────────────────────────────────
-        function updateCoverArt(song) {
-            const img = document.getElementById('coverArt');
-            img.classList.remove('loaded');
-            const src = song.cover || '';
-            if (!src) return;
-            img.onload = () => img.classList.add('loaded');
-            img.onerror = () => {}; // silently hide if missing
-            img.src = src;
-        }
-
-        function updateDownloadLinks(song) {
-            parts.forEach(part => {
-                const partEl = document.querySelector(`[data-part="${part}"]`);
-                const links  = song.downloads && song.downloads[part];
-                const btns   = partEl.querySelectorAll('.download-btn');
-                const pdfBtn = btns[0], mp3Btn = btns[1];
-                if (links && links.pdf) { pdfBtn.href = links.pdf;  pdfBtn.classList.remove('unavailable'); }
-                else                    { pdfBtn.href = '#';         pdfBtn.classList.add('unavailable'); }
-                if (links && links.mp3) { mp3Btn.href = links.mp3;  mp3Btn.classList.remove('unavailable'); }
-                else                    { mp3Btn.href = '#';         mp3Btn.classList.add('unavailable'); }
-            });
-        }
-
         // ── BAR RULER ────────────────────────────────────────────────────────
         function renderBarRuler(barsData, duration) {
             const ruler = document.getElementById('barRuler');
@@ -1867,6 +1798,12 @@
         document.getElementById('playBtn').addEventListener('click', togglePlay);
         document.getElementById('restartBtn').addEventListener('click', handleRestart);
         document.getElementById('nextBtn').addEventListener('click', goToNextSong);
+
+        // ── AUTOPLAY TOGGLE ──────────────────────────────────────────────────
+        document.getElementById('autoplayBtn').addEventListener('click', () => {
+            autoplayEnabled = !autoplayEnabled;
+            document.getElementById('autoplayBtn').classList.toggle('active', autoplayEnabled);
+        });
 
         // ── PROGRESS BAR SCRUB ───────────────────────────────────────────────
         // Use a unified approach: mousedown/touchstart starts scrub,
