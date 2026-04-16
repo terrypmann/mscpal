@@ -672,9 +672,39 @@
                 flex: none;
                 order: 10;
             }
-            .part-name { width: auto; font-size: 13px; }
+            /* Fixed width sized to "Baritone" + breathing room */
+            .part-name { width: 68px; flex-shrink: 0; font-size: 13px; }
             .btn { padding: 5px 9px; font-size: 11px; }
 
+            /* Fixed-width button group so all rows align left and right */
+            .part-controls {
+                width: 154px;
+                flex-shrink: 0;
+                display: flex;
+                justify-content: space-between;
+            }
+            .part-controls .btn {
+                flex: 1;
+            }
+            .part-controls .btn + .btn {
+                margin-left: 5px;
+            }
+
+            /* Click row: select + mute share the exact same total width */
+            [data-part="click"] .part-controls {
+                width: 154px;
+                flex-shrink: 0;
+                display: flex;
+                gap: 5px;
+            }
+            [data-part="click"] .part-controls .click-select {
+                flex: 1;
+                min-width: 0;
+            }
+            [data-part="click"] .part-controls .btn {
+                flex: none;
+                width: auto;
+            }
         }
     </style>
 </head>
